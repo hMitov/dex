@@ -30,7 +30,7 @@ contract DexPoolTest is Test {
     uint256 private constant INITIAL_TOKEN_SUPPLY = 1000 ether;
     uint256 private constant ETH_AMOUNT = 10 ether;
     uint256 private constant TOKEN_AMOUNT = 100;
-    
+
     // Fee constants from DexPool contract
     uint256 private constant FEE_DENOMINATOR = 10000;
     uint256 private constant FEE_BASIS_POINTS = 100; // 1%
@@ -181,7 +181,7 @@ contract DexPoolTest is Test {
         // Second user adds liquidity (double the amount)
         uint256 secondUserEthAmount = ETH_AMOUNT * 2;
         uint256 secondUserTokenAmount = TOKEN_AMOUNT * 2;
-        
+
         vm.deal(user2, secondUserEthAmount);
         vm.startPrank(user2);
         token.approve(address(dexPool), secondUserTokenAmount);
@@ -202,7 +202,7 @@ contract DexPoolTest is Test {
         // Third user adds liquidity (same as first user)
         uint256 thirdUserEthAmount = ETH_AMOUNT;
         uint256 thirdUserTokenAmount = TOKEN_AMOUNT;
-        
+
         vm.deal(user3, thirdUserEthAmount);
         vm.startPrank(user3);
         token.approve(address(dexPool), thirdUserTokenAmount);
@@ -225,19 +225,29 @@ contract DexPoolTest is Test {
         assertEq(dexPool.balanceOf(user1), ETH_AMOUNT, "User1 should have 10 LP tokens");
         assertEq(dexPool.balanceOf(user2), expectedLPTokens, "User2 should have 20 LP tokens");
         assertEq(dexPool.balanceOf(user3), expectedLPTokensUser3, "User3 should have 10 LP tokens");
-        
+
         // Verify total supply
-        assertEq(dexPool.totalSupply(), ETH_AMOUNT + expectedLPTokens + expectedLPTokensUser3, "Total supply should be 40 LP tokens");
-        
+        assertEq(
+            dexPool.totalSupply(),
+            ETH_AMOUNT + expectedLPTokens + expectedLPTokensUser3,
+            "Total supply should be 40 LP tokens"
+        );
+
         // Verify pool balances
-        assertEq(address(dexPool).balance, ETH_AMOUNT + secondUserEthAmount + thirdUserEthAmount, "Pool should have 40 ETH");
-        assertEq(dexPool.getReserve(), TOKEN_AMOUNT + secondUserTokenAmount + thirdUserTokenAmount, "Pool should have 400 tokens");
-        
+        assertEq(
+            address(dexPool).balance, ETH_AMOUNT + secondUserEthAmount + thirdUserEthAmount, "Pool should have 40 ETH"
+        );
+        assertEq(
+            dexPool.getReserve(),
+            TOKEN_AMOUNT + secondUserTokenAmount + thirdUserTokenAmount,
+            "Pool should have 400 tokens"
+        );
+
         // Verify ownership proportions
         uint256 user1Ownership = (dexPool.balanceOf(user1) * 100) / dexPool.totalSupply();
         uint256 user2Ownership = (dexPool.balanceOf(user2) * 100) / dexPool.totalSupply();
         uint256 user3Ownership = (dexPool.balanceOf(user3) * 100) / dexPool.totalSupply();
-        
+
         assertEq(user1Ownership, 25, "User1 should own 25% of the pool");
         assertEq(user2Ownership, 50, "User2 should own 50% of the pool");
         assertEq(user3Ownership, 25, "User3 should own 25% of the pool");
@@ -316,7 +326,7 @@ contract DexPoolTest is Test {
         assertEq(dexPool.totalSupply(), 0);
         assertEq(address(dexPool).balance, 0);
         assertEq(token.balanceOf(address(dexPool)), 0);
-        
+
         (uint256 ethReturned, uint256 tokenReturned) = dexPool.getEthAndTokenToReturn();
         assertEq(ethReturned, ETH_AMOUNT);
         assertEq(tokenReturned, TOKEN_AMOUNT);
@@ -463,7 +473,7 @@ contract DexPoolTest is Test {
         uint256 actualEthReceived = user2.balance - initialBalance;
         // Verify the swap worked correctly
         assertGt(actualEthReceived, 0, "User should receive ETH from swap");
-        
+
         // Verify reserves were updated correctly
         uint256 reserveEthAfter = address(dexPool).balance;
         uint256 reserveTokenAfter = dexPool.getReserve();
@@ -524,7 +534,7 @@ contract DexPoolTest is Test {
         assertEq(tokenReturned, 0);
 
         // Add and remove liquidity
-        vm.deal(user1, ETH_AMOUNT);    
+        vm.deal(user1, ETH_AMOUNT);
         vm.startPrank(user1);
         token.approve(address(dexPool), TOKEN_AMOUNT);
         dexPool.addLiquidity{value: ETH_AMOUNT}(TOKEN_AMOUNT);
@@ -557,7 +567,6 @@ contract DexPoolTest is Test {
         assertEq(dexPool.getBalance(user1), ETH_AMOUNT);
         vm.stopPrank();
     }
-
 
     function testReceiveRevert() public {
         vm.expectRevert(DexPool.DirectEthTransfersNotSupported.selector);
@@ -594,7 +603,7 @@ contract DexPoolTest is Test {
 
     function testMultipleUsersAddLiquidity() public {
         // User 1 adds liquidity
-        vm.deal(user1, ETH_AMOUNT);    
+        vm.deal(user1, ETH_AMOUNT);
         vm.startPrank(user1);
         token.approve(address(dexPool), TOKEN_AMOUNT);
         dexPool.addLiquidity{value: ETH_AMOUNT}(TOKEN_AMOUNT);
@@ -646,11 +655,9 @@ contract DexPoolTest is Test {
         vm.deal(user2, ETH_AMOUNT);
         vm.startPrank(user2);
         token.approve(address(dexPool), 1);
-        
+
         vm.expectRevert(DexPool.InvalidOutputAmount.selector);
         dexPool.tokenToEthSwap(1);
         vm.stopPrank();
     }
 }
-
-
