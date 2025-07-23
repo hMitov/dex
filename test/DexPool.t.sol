@@ -6,14 +6,6 @@ import {DexPool} from "../src/DexPool.sol";
 import {SimpleToken} from "../src/SimpleToken.sol";
 import {Pausable} from "openzeppelin-contracts/contracts/utils/Pausable.sol";
 
-// contract MockFailingToken is SimpleToken {
-//     constructor() SimpleToken("Mock Failing Token", "MFT") {}
-
-//     function transferFrom(address from, address to, uint256 amount) external pure override returns (bool) {
-//         return false;
-//     }
-// }
-
 contract DexPoolTest is Test {
     DexPool private dexPool;
     SimpleToken private token;
@@ -31,7 +23,6 @@ contract DexPoolTest is Test {
     uint256 private constant ETH_AMOUNT = 10 ether;
     uint256 private constant TOKEN_AMOUNT = 100;
 
-    // Fee constants from DexPool contract
     uint256 private constant FEE_DENOMINATOR = 10000;
     uint256 private constant FEE_BASIS_POINTS = 100; // 1%
 
@@ -154,9 +145,6 @@ contract DexPoolTest is Test {
         vm.startPrank(user1);
         token.approve(address(dexPool), TOKEN_AMOUNT);
 
-        uint256 initialBalance = user1.balance;
-        uint256 initialTokenBalance = token.balanceOf(user1);
-
         vm.expectEmit(true, false, false, true);
         emit LiquidityAdded(user1, ETH_AMOUNT, TOKEN_AMOUNT, ETH_AMOUNT);
 
@@ -189,7 +177,6 @@ contract DexPoolTest is Test {
         // Get state before second user adds liquidity
         uint256 totalSupplyBefore = dexPool.totalSupply();
         uint256 reserveEthBefore = address(dexPool).balance;
-        uint256 reserveTokenBefore = dexPool.getReserve();
 
         // Calculate expected LP tokens: (totalSupply * ethAmount) / reserveEth
         uint256 expectedLPTokens = (totalSupplyBefore * secondUserEthAmount) / reserveEthBefore;
@@ -210,7 +197,6 @@ contract DexPoolTest is Test {
         // Get state before third user adds liquidity
         uint256 totalSupplyBeforeUser3 = dexPool.totalSupply();
         uint256 reserveEthBeforeUser3 = address(dexPool).balance;
-        uint256 reserveTokenBeforeUser3 = dexPool.getReserve();
 
         // Calculate expected LP tokens for User3: (totalSupply * ethAmount) / reserveEth
         uint256 expectedLPTokensUser3 = (totalSupplyBeforeUser3 * thirdUserEthAmount) / reserveEthBeforeUser3;
@@ -286,14 +272,6 @@ contract DexPoolTest is Test {
         vm.stopPrank();
     }
 
-    // function testAddLiquidityRevertInsufficientLiquidityMinted() public {
-    //     // This test doesn't actually trigger the InsufficientLiquidityMinted error
-    //     // because the calculation (totalSupply * ethAmount) / reserveEth
-    //     // always results in at least 1 LP token with the current values
-    //     // To properly test this, we would need a scenario where the calculation
-    //     // actually results in 0 due to integer division
-    // }
-
     function testAddLiquidityRevertWhenPaused() public {
         vm.prank(pauser);
         dexPool.pause();
@@ -314,8 +292,6 @@ contract DexPoolTest is Test {
         dexPool.addLiquidity{value: ETH_AMOUNT}(TOKEN_AMOUNT);
 
         uint256 lpTokens = dexPool.balanceOf(user1);
-        uint256 initialBalance = user1.balance;
-        uint256 initialTokenBalance = token.balanceOf(user1);
 
         vm.expectEmit(true, false, false, true);
         emit LiquidityRemoved(user1, ETH_AMOUNT, TOKEN_AMOUNT, lpTokens);

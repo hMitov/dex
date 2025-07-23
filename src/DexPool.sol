@@ -59,9 +59,6 @@ contract DexPool is ERC20, ReentrancyGuard, Pausable, AccessControl {
     /// @notice Error thrown when ETH transfer fails
     error EthTransferFailed();
 
-    /// @notice Error thrown when token transfer fails
-    error TokenTransferFailed();
-
     /// @notice Error thrown when insufficient LP tokens are minted
     error InsufficientLiquidityMinted();
 
@@ -189,8 +186,8 @@ contract DexPool is ERC20, ReentrancyGuard, Pausable, AccessControl {
         uint256 ethInput = msg.value;
         uint256 reserveEth = address(this).balance - ethInput;
         uint256 reserveToken = token.balanceOf(address(this));
-        uint256 ethInputWithFee = (ethInput * (FEE_DENOMINATOR - FEE_BASIS_POINTS)) / FEE_DENOMINATOR;
-        uint256 tokensOutput = (ethInputWithFee * reserveToken) / (reserveEth + ethInputWithFee);
+        uint256 ethInputAfterFee = ethInput * (FEE_DENOMINATOR - FEE_BASIS_POINTS) / FEE_DENOMINATOR;
+        uint256 tokensOutput = (ethInputAfterFee * reserveToken) / (reserveEth + ethInputAfterFee);
 
         if (tokensOutput == 0 || tokensOutput >= reserveToken) revert InvalidOutputAmount();
         token.transfer(msg.sender, tokensOutput);
@@ -206,8 +203,8 @@ contract DexPool is ERC20, ReentrancyGuard, Pausable, AccessControl {
 
         uint256 reserveEth = address(this).balance;
         uint256 reserveToken = token.balanceOf(address(this));
-        uint256 tokensInWithFee = (tokensToSwap * (FEE_DENOMINATOR - FEE_BASIS_POINTS)) / FEE_DENOMINATOR;
-        uint256 ethOutput = (tokensInWithFee * reserveEth) / (reserveToken + tokensInWithFee);
+        uint256 tokensInAfterFee = (tokensToSwap * (FEE_DENOMINATOR - FEE_BASIS_POINTS)) / FEE_DENOMINATOR;
+        uint256 ethOutput = (tokensInAfterFee * reserveEth) / (reserveToken + tokensInAfterFee);
 
         if (ethOutput == 0 || ethOutput >= reserveEth) revert InvalidOutputAmount();
         _safeTransferETH(msg.sender, ethOutput);

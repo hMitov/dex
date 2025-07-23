@@ -18,10 +18,6 @@ abstract contract EnvLoader is Script {
     /// @param key The env variable key that contains zero address
     error ZeroAddressEnvVariable(string key);
 
-    /// @notice Error for zero or invalid uint environment variable
-    /// @param key The env variable key that contains invalid uint
-    error InvalidUintEnvVariable(string key);
-
     /// @notice Abstract method to be implemented by inheriting scripts for loading .env variables
     /// @dev    Called at the beginning of the `run()` method in deployment scripts
     function loadEnvVars() internal virtual;
@@ -45,19 +41,6 @@ abstract contract EnvLoader is Script {
         try vm.envAddress(key) returns (address addr) {
             if (addr == address(0)) revert ZeroAddressEnvVariable(key);
             return addr;
-        } catch {
-            revert InvalidEnvVariable(key);
-        }
-    }
-
-    /// @notice Loads unsigned integer from the .env
-    /// @param key The .env variable key
-    /// @return 'The' parsed uint8 value
-    function getEnvUint(string memory key) internal view returns (uint8) {
-        try vm.envUint(key) returns (uint256 val) {
-            if (val == 0) revert InvalidUintEnvVariable(key);
-            if (val > type(uint8).max) revert InvalidUintEnvVariable(key);
-            return uint8(val);
         } catch {
             revert InvalidEnvVariable(key);
         }
